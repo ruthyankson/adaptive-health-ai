@@ -22,13 +22,7 @@ The repository is designed to be **modular and extensible**, supporting experime
 
 ### Create an Environment from the `conda-linux-64.lock` File
 
-There are two main options for creating a conda environment for this project. The recommended approach is to use the explicit lock file for deterministic builds.
-
-This repository includes an explicit conda lock file:
-
-- `conda-linux-64.lock` (platform: `linux-64`, kind: `explicit`)
-
-An explicit lock file pins exact package builds for a specific platform, which is ideal for deterministic CI and container builds.
+This project offers two ways to create a conda environment, but the recommended approach is to use the included explicit lock file, `conda-linux-64.lock` (platform: `linux-64`, kind: `explicit`), which pins exact package builds for fully deterministic, reproducible setups.
 
 #### Option A (Recommended on Linux): Create the env directly from the explicit lock
 
@@ -39,7 +33,7 @@ conda create -n health-ai --file conda-linux-64.lock
 conda activate health-ai
 ```
 
-#### Option B: (Recommended on Windows/macOS): Use the lock in CI/Docker, use `environment.yml` and then pin it
+#### Option B: (Recommended on Windows/macOS): use `environment.yml` and then pin it
 
 Because `conda-linux-64.lock` is explicitly locked for `linux-64`, it is not intended to be used directly on Windows or macOS.
 
