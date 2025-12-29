@@ -20,6 +20,40 @@ The repository is designed to be **modular and extensible**, supporting experime
 
 ## Reproducible Environment Tooling
 
+### Create an Environment from the `conda-linux-64.lock` File
+
+There are two main options for creating a conda environment for this project. The recommended approach is to use the explicit lock file for deterministic builds.
+
+This repository includes an explicit conda lock file:
+
+- `conda-linux-64.lock` (platform: `linux-64`, kind: `explicit`)
+
+An explicit lock file pins exact package builds for a specific platform, which is ideal for deterministic CI and container builds.
+
+#### Option A (Recommended on Linux): Create the env directly from the explicit lock
+
+On a Linux machine (CI/Docker or in a Linux container) where `health-ai` represents the target environment name:
+
+```bash
+conda create -n health-ai --file conda-linux-64.lock
+conda activate health-ai
+```
+
+#### Option B: (Recommended on Windows/macOS): Use the lock in CI/Docker, use `environment.yml` and then pin it
+
+Because `conda-linux-64.lock` is explicitly locked for `linux-64`, it is not intended to be used directly on Windows or macOS.
+
+For local development on Windows/macOS, create the environment from `environment.yml`:
+
+```bash
+conda env create -f environment.yml -n health-ai
+conda activate health-ai
+```
+
+Then, to ensure consistency with the locked versions, use the `pin_env_versions.py` script to pin the installed/new package versions back into `environment.yml`. View the script documentation below for usage details.
+
+---
+
 ### `pin_env_versions.py`
 
 This script pins the package versions in `environment.yml` based on the versions currently installed in a specified conda environment, and can optionally generate an explicit `linux-64` lock file via `conda-lock`.
@@ -58,14 +92,14 @@ A) Pin package versions in-place (recommended).
 This updates `environment.yml` directly.
 
 ```bash
-conda run -n health-ai python pin_env_versions.py -i environment.yml -n health-ai --inplace --pin-pip
+conda run -n health-ai python pin_env_versions.py -i \ environment.yml -n health-ai --inplace --pin-pip
 ```
 B) Pin package versions to a new file
 
 This writes to environment.pinned.yml without modifying the original.
 
 ```bash
-conda run -n health-ai python pin_env_versions.py -i environment.yml -o environment.pinned.yml -n health-ai --pin-pip
+conda run -n health-ai python pin_env_versions.py -i \ environment.yml -o environment.pinned.yml -n health-ai --pin-pip
 ```
 C) Pin in-place and generate a linux-64 explicit lock file
 
@@ -81,4 +115,60 @@ Notes
 - If your `environment.yml` includes `pip:` dependencies, use `--pin-pip` to ensure those are pinned as well.
 - The lock file is generated for `linux-64` to support consistent CI and Docker builds, even if development is done on Windows or macOS.
 
+To deactivate the conda environment when done:
+
+```bash
+conda deactivate
+```
 ---
+
+## Running the Project
+
+You can run this project either as a Docker container (recommended for quick start) or locally using Conda (recommended for development).
+
+---
+
+### Option A: Run via Docker (Quick Start)
+
+The container image is published to Docker Hub as:
+
+- `doxelray/adaptive-health-ai`
+
+#### Pull the latest image
+
+```bash
+docker pull doxelray/adaptive-health-ai:latest
+```
+
+#### Run the container
+
+```bash
+docker run -p 8000:8000 doxelray/adaptive-health-ai:latest
+```
+This starts the application and maps port 8000 from the container to your host machine.
+
+#### Access the application
+Open your web browser and navigate to `http://localhost:8000` to access the application.
+
+### Option B: Run Locally with Conda (Development)  
+1. Create and activate the conda environment as described in the "Reproducible Environment Tooling" section.  
+2. Run the application:
+
+```bash 
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+3. Access the application at `http://localhost:8000` in your web browser. **OR** Verify the service is running:
+
+```bash
+curl http://localhost:8000/health
+```
+
+Optionally, you can build and run the Docker container locally:
+
+```bash
+docker build -t adaptive-health-ai:local .
+docker run -p 8000:8000 adaptive-health-ai:local
+```
+
+Then go back to step 3 to access the application.
